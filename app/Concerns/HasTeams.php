@@ -11,6 +11,33 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 trait HasTeams
 {
     /**
+     * Runs automatically for any model using this trait ("boot" + trait name).
+     * When a user deletes their account, clean up the teams they own.
+     */
+    public static function bootHasTeams(): void
+    {
+        static::deleting(function (self $user): void {
+            foreach ($user->ownedTeams()->get() as $team) {
+                $successor = $team->members()
+                    ->whereKeyNot($user->id)
+                    ->orderByRaw("case when team_user.role = 'admin' then 0 else 1 end")
+                    ->orderBy('team_user.created_at')
+                    ->first();
+
+                // Personal teams, and teams nobody else is in, are removed.
+                if ($team->personal_team || $successor === null) {
+                    $team->delete();
+
+                    continue;
+                }
+
+                // Shared teams are handed to an admin (or the longest-standing member).
+                $team->members()->updateExistingPivot($successor->id, ['role' => TeamRole::Owner->value]);
+            }
+        });
+    }
+
+    /**
      * @return BelongsToMany<Team, $this, Membership, 'membership'>
      */
     public function teams(): BelongsToMany
