@@ -23,16 +23,40 @@ class TeamPolicy
     }
 
     /**
-     * Invite and remove members.
+     * Invite people and cancel invitations. Personal teams are private, so no one can be invited.
      */
     public function manageMembers(User $user, Team $team): bool
     {
-        return $user->hasTeamRole($team, TeamRole::Owner, TeamRole::Admin);
+        return ! $team->personal_team
+            && $user->hasTeamRole($team, TeamRole::Owner, TeamRole::Admin);
     }
 
     public function updateMemberRole(User $user, Team $team): bool
     {
-        return $user->hasTeamRole($team, TeamRole::Owner);
+        return ! $team->personal_team && $user->hasTeamRole($team, TeamRole::Owner);
+    }
+
+    /**
+     * Owners can remove anyone except themselves, admins can remove members,
+     * and everyone except the owner can leave (remove themselves).
+     */
+    public function removeMember(User $user, Team $team, User $member): bool
+    {
+        $memberRole = $member->teamRole($team);
+
+        if ($memberRole === null || $memberRole === TeamRole::Owner) {
+            return false;
+        }
+
+        if ($member->is($user)) {
+            return true;
+        }
+
+        return match ($user->teamRole($team)) {
+            TeamRole::Owner => true,
+            TeamRole::Admin => $memberRole === TeamRole::Member,
+            default => false,
+        };
     }
 
     public function delete(User $user, Team $team): bool

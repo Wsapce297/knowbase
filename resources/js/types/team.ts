@@ -17,11 +17,26 @@ export type TeamMember = {
     name: string;
     email: string;
     role: TeamRole;
+    canRemove: boolean;
+};
+
+export type TeamInvitation = {
+    id: number;
+    email: string;
+    role: TeamRole;
+    expired: boolean;
+    expiresAt: string;
+};
+
+export type RoleOption = {
+    value: TeamRole;
+    label: string;
 };
 
 export type TeamPermissions = {
     canUpdate: boolean;
     canManageMembers: boolean;
+    canUpdateMemberRole: boolean;
     canDelete: boolean;
 };
 

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Teams;
 
+use App\Enums\TeamRole;
 use App\Http\Controllers\Controller;
+use App\Models\TeamInvitation;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -21,6 +23,8 @@ class TeamSettingsController extends Controller
 
         Gate::authorize('view', $team);
 
+        $canManageMembers = $user->can('manageMembers', $team);
+
         $members = $team->members()->orderBy('users.name')->get();
 
         return Inertia::render('settings/Team', [
@@ -35,10 +39,25 @@ class TeamSettingsController extends Controller
                 'name' => $member->name,
                 'email' => $member->email,
                 'role' => $member->membership->role->value,
+                'canRemove' => $user->can('removeMember', [$team, $member]),
             ])->values()->all(),
+            'invitations' => $canManageMembers
+                ? $team->invitations()->latest()->get()->map(fn (TeamInvitation $invitation) => [
+                    'id' => $invitation->id,
+                    'email' => $invitation->email,
+                    'role' => $invitation->role->value,
+                    'expired' => $invitation->isExpired(),
+                    'expiresAt' => $invitation->expires_at->toDateString(),
+                ])->values()->all()
+                : [],
+            'assignableRoles' => collect(TeamRole::assignable())->map(fn (TeamRole $role) => [
+                'value' => $role->value,
+                'label' => $role->label(),
+            ])->all(),
             'permissions' => [
                 'canUpdate' => $user->can('update', $team),
-                'canManageMembers' => $user->can('manageMembers', $team),
+                'canManageMembers' => $canManageMembers,
+                'canUpdateMemberRole' => $user->can('updateMemberRole', $team),
                 'canDelete' => $user->can('delete', $team),
             ],
         ]);
