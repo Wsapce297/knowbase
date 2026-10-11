@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\SharedTeamData;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -40,7 +41,9 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
+
             ],
+            'teams' => fn () => SharedTeamData::for($request->user()),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
+import TeamSettingsController from '@/actions/App/Http/Controllers/Teams/TeamSettingsController';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -14,6 +15,10 @@ const sidebarNavItems: NavItem[] = [
     {
         title: 'Profile',
         href: editProfile(),
+    },
+    {
+        title: 'Team',
+        href: TeamSettingsController.edit(),
     },
     {
         title: 'Security',
@@ -32,7 +37,7 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
     <div class="px-4 py-6">
         <Heading
             title="Settings"
-            description="Manage your profile and account settings"
+            description="Manage your profile, team and account settings"
         />
 
         <div class="flex flex-col lg:flex-row lg:space-x-12">
