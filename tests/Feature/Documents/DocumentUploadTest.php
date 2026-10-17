@@ -2,11 +2,13 @@
 
 use App\Enums\DocumentStatus;
 use App\Enums\TeamRole;
+use App\Jobs\ProcessDocument;
 use App\Models\Document;
 use App\Models\DocumentChunk;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -34,6 +36,9 @@ function documentsTeam(): array
 beforeEach(function () {
     // Files are written to a temporary fake disk, never to your real storage folder.
     Storage::fake('local');
+
+    // Jobs are recorded instead of run, so uploads never start real processing here.
+    Queue::fake();
 });
 
 test('a member can upload a markdown file', function () {
@@ -56,6 +61,19 @@ test('a member can upload a markdown file', function () {
         ->and($document->path)->toStartWith("teams/{$team->id}/documents/");
 
     Storage::disk('local')->assertExists($document->path);
+});
+
+test('uploading a document queues it for processing', function () {
+    [, , , $member] = documentsTeam();
+
+    $this->actingAs($member)->post(route('documents.store'), [
+        'file' => UploadedFile::fake()->createWithContent('faq.txt', 'Question and answer'),
+    ]);
+
+    $document = Document::sole();
+
+    Queue::assertCount(1);
+    Queue::assertPushed(ProcessDocument::class, fn (ProcessDocument $job): bool => $job->document->is($document));
 });
 
 test('a custom title can be given', function () {
@@ -93,6 +111,7 @@ test('other file types are rejected', function () {
         ->assertSessionHasErrors(['file' => 'Upload a PDF, Markdown (.md) or text (.txt) file.']);
 
     expect(Document::count())->toBe(0);
+    Queue::assertNothingPushed();
 });
 
 test('files larger than 10 MB are rejected', function () {
