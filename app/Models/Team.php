@@ -47,6 +47,14 @@ class Team extends Model
         return $this->hasMany(TeamInvitation::class);
     }
 
+    /**
+     * @return HasMany<Document, $this>
+     */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Document::class);
+    }
+
     public function owner(): ?User
     {
         return $this->members()
