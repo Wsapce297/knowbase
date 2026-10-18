@@ -1,53 +1,13 @@
 <?php
 
 use App\Ai\DocumentSearch;
-use App\Ai\Embedder;
 use App\Ai\SearchResult;
-use App\Models\Document;
-use App\Models\DocumentChunk;
 use App\Models\Team;
 use App\Models\User;
 use Laravel\Ai\Embeddings;
 use Laravel\Ai\Prompts\EmbeddingsPrompt;
 
-/**
- * A 768-number vector that is zero except for the given positions.
- * Example: searchVector([0 => 1.0]) points along the "first" direction.
- *
- * @param  array<int, float>  $values
- * @return list<float>
- */
-function searchVector(array $values): array
-{
-    $vector = array_fill(0, Embedder::DIMENSIONS, 0.0);
-
-    foreach ($values as $index => $value) {
-        $vector[$index] = $value;
-    }
-
-    return $vector;
-}
-
-/**
- * A ready document in $team with one chunk per [content, embedding] pair.
- *
- * @param  list<array{0: string, 1: list<float>}>  $chunks
- */
-function searchableDocument(Team $team, string $title, array $chunks): Document
-{
-    $document = Document::factory()->ready()->for($team)->create(['title' => $title]);
-
-    foreach ($chunks as $position => [$content, $embedding]) {
-        DocumentChunk::factory()->for($document)->create([
-            'position' => $position,
-            'page' => $position + 1,
-            'content' => $content,
-            'embedding' => $embedding,
-        ]);
-    }
-
-    return $document;
-}
+// searchVector() and searchableDocument() live in tests/Pest.php.
 
 beforeEach(function () {
     // Every question becomes the "first direction" vector.
@@ -77,8 +37,8 @@ test('the closest passages come first with their source', function () {
 
 test('unrelated passages are left out', function () {
     searchableDocument($this->team, 'Handbook', [
-        ['Related', searchVector([0 => 0.6, 1 => 0.8])],   // similarity 0.6
-        ['Unrelated', searchVector([1 => 1.0])],           // similarity 0.0
+        ['Related', searchVector([0 => 0.6, 1 => 0.8])],          // similarity 0.6
+        ['Unrelated', searchVector([1 => 1.0])],                  // similarity 0.0
         ['Barely related', searchVector([0 => 0.3, 1 => 0.954])], // similarity 0.3
     ]);
 
@@ -106,6 +66,18 @@ test('the number of passages is limited', function () {
 
     expect(app(DocumentSearch::class)->search($this->team, 'Question'))->toHaveCount(DocumentSearch::LIMIT)
         ->and(app(DocumentSearch::class)->search($this->team, 'Question', limit: 2))->toHaveCount(2);
+});
+
+test('identical passages from duplicate uploads are returned once', function () {
+    foreach (range(1, 3) as $copy) {
+        searchableDocument($this->team, "Sample copy {$copy}", [['Refunds within 30 days.', searchVector([0 => 1.0])]]);
+    }
+    searchableDocument($this->team, 'Shipping', [['Shipping takes 3 days.', searchVector([0 => 0.9, 1 => 0.436])]]);
+
+    $results = app(DocumentSearch::class)->search($this->team, 'Refunds?');
+
+    expect(array_map(fn (SearchResult $r) => $r->content, $results))
+        ->toBe(['Refunds within 30 days.', 'Shipping takes 3 days.']);
 });
 
 test('the question is embedded as a search query', function () {
