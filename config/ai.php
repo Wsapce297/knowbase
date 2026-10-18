@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => 'openai',
+    'default' => env('AI_DEFAULT_PROVIDER', 'gemini'),
     'default_for_images' => 'gemini',
     'default_for_audio' => 'openai',
     'default_for_transcription' => 'openai',
@@ -104,6 +104,7 @@ return [
             'driver' => 'gemini',
             'key' => env('GEMINI_API_KEY'),
             'url' => env('GEMINI_URL', 'https://generativelanguage.googleapis.com/v1beta/'),
+            'models' => ['text' => ['default' => env('GEMINI_TEXT_MODEL', 'gemini-flash-latest')]],
         ],
 
         'groq' => [
@@ -126,6 +127,7 @@ return [
             'key' => env('OLLAMA_API_KEY', ''),
             'url' => env('OLLAMA_URL', 'http://localhost:11434'),
             'models' => [
+                'text' => ['default' => env('OLLAMA_TEXT_MODEL', 'llama3.2:3b')],
                 'embeddings' => [
                     'default' => env('OLLAMA_EMBEDDINGS_MODEL', 'nomic-embed-text'),
                     'dimensions' => 768,
