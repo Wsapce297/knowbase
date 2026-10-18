@@ -29,6 +29,29 @@ class SendMessage
         // Ask first. If the AI fails, nothing is saved and the user can simply try again.
         $answer = $this->knowbase->ask($conversation->team, $question, $this->history($conversation));
 
+        return $this->save($conversation, $question, $answer);
+    }
+
+    /**
+     * Like handle(), but $onText receives the answer piece by piece while it is written.
+     *
+     * @param  callable(string): void  $onText
+     * @return ConversationMessage The assistant's reply.
+     */
+    public function stream(Conversation $conversation, string $question, callable $onText): ConversationMessage
+    {
+        $question = trim($question);
+
+        $answer = $this->knowbase->stream($conversation->team, $question, $this->history($conversation), $onText);
+
+        return $this->save($conversation, $question, $answer);
+    }
+
+    /**
+     * Save the question and the answer together, or neither.
+     */
+    private function save(Conversation $conversation, string $question, Answer $answer): ConversationMessage
+    {
         return DB::transaction(function () use ($conversation, $question, $answer): ConversationMessage {
             $conversation->messages()->create([
                 'role' => MessageRole::User,

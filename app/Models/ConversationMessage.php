@@ -24,6 +24,22 @@ class ConversationMessage extends Model
     }
 
     /**
+     * The shape the chat page works with (camelCase keys, like other pages).
+     *
+     * @return array{id: int, role: string, content: string, sources: list<array<string, mixed>>, createdAt: string}
+     */
+    public function toChatArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'role' => $this->role->value,
+            'content' => $this->content,
+            'sources' => $this->sources ?? [],
+            'createdAt' => $this->created_at->toIso8601String(),
+        ];
+    }
+
+    /**
      * @return BelongsTo<Conversation, $this>
      */
     public function conversation(): BelongsTo
