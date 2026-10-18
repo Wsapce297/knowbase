@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import TeamSettingsController from '@/actions/App/Http/Controllers/Teams/TeamSettingsController';
+import WidgetSettingsController from '@/actions/App/Http/Controllers/Widgets/WidgetSettingsController';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -19,6 +20,10 @@ const sidebarNavItems: NavItem[] = [
     {
         title: 'Team',
         href: TeamSettingsController.edit(),
+    },
+     {
+        title: 'Website widget',
+        href: WidgetSettingsController.edit(),
     },
     {
         title: 'Security',
