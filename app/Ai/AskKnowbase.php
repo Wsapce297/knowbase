@@ -15,9 +15,12 @@ class AskKnowbase
 
     public function __construct(private DocumentSearch $search) {}
 
-    public function ask(Team $team, string $question): Answer
+    /**
+     * @param  list<array{role: string, content: string}>  $history  Earlier messages, oldest first.
+     */
+    public function ask(Team $team, string $question, array $history = []): Answer
     {
-        $sources = $this->search->search($team, $question);
+        $sources = $this->search->search($team, $this->searchText($question, $history));
 
         // Nothing relevant: answer right away and save a model call (and free quota).
         if ($sources === []) {
@@ -25,9 +28,31 @@ class AskKnowbase
         }
 
         $response = (new KnowbaseAssistant($team->name))
+            ->withMessages($history)
             ->prompt($this->buildPrompt($question, $sources));
 
         return new Answer(trim($response->text), $sources, $response->meta->provider);
+    }
+
+    /**
+     * A follow-up like "and how long does it take?" means little on its own,
+     * so search with the previous question too.
+     *
+     * @param  list<array{role: string, content: string}>  $history
+     */
+    private function searchText(string $question, array $history): string
+    {
+        $previousQuestion = null;
+
+        foreach ($history as $message) {
+            if ($message['role'] === 'user') {
+                $previousQuestion = $message['content'];
+            }
+        }
+
+        return $previousQuestion === null
+            ? $question
+            : $previousQuestion."\n".$question;
     }
 
     /**
