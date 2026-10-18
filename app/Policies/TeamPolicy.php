@@ -31,6 +31,15 @@ class TeamPolicy
             && $user->hasTeamRole($team, TeamRole::Owner, TeamRole::Admin);
     }
 
+    /**
+     * Set up the website widget: switch it on or off, choose allowed websites, regenerate its key.
+     * Personal teams may have one too (a solo user embedding it on their own site).
+     */
+    public function manageWidget(User $user, Team $team): bool
+    {
+        return $user->hasTeamRole($team, TeamRole::Owner, TeamRole::Admin);
+    }
+
     public function updateMemberRole(User $user, Team $team): bool
     {
         return ! $team->personal_team && $user->hasTeamRole($team, TeamRole::Owner);
