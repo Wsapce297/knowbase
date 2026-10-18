@@ -123,7 +123,10 @@ const fileInputClass =
         <h1 class="sr-only">Documents</h1>
 
         <!-- Upload -->
-        <div v-if="permissions.canUpload" class="flex max-w-3xl flex-col space-y-6">
+        <div
+            v-if="permissions.canUpload"
+            class="flex max-w-3xl flex-col space-y-6"
+        >
             <Heading
                 variant="small"
                 title="Upload a document"
@@ -157,7 +160,9 @@ const fileInputClass =
                     <div class="grid content-start gap-2">
                         <Label for="title">
                             Title
-                            <span class="font-normal text-muted-foreground">(optional)</span>
+                            <span class="font-normal text-muted-foreground"
+                                >(optional)</span
+                            >
                         </Label>
                         <Input
                             id="title"
@@ -282,8 +287,8 @@ const fileInputClass =
                     Delete "{{ documentToDelete?.title }}"?
                 </DialogTitle>
                 <DialogDescription>
-                    The file and all its indexed passages are removed. Chats
-                    can no longer cite it. This cannot be undone.
+                    The file and all its indexed passages are removed. Chats can
+                    no longer cite it. This cannot be undone.
                 </DialogDescription>
             </DialogHeader>
 
