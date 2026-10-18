@@ -76,6 +76,19 @@ class Widget extends Model
     }
 
     /**
+     * The snippet a team pastes into its website. The loader script (part 5)
+     * reads the key from data-key and opens the chat box.
+     */
+    public function embedCode(): string
+    {
+        return sprintf(
+            '<script src="%s" data-key="%s" async></script>',
+            url('widget.js'),
+            $this->public_key,
+        );
+    }
+
+    /**
      * @return BelongsTo<Team, $this>
      */
     public function team(): BelongsTo
