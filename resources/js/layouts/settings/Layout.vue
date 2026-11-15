@@ -21,7 +21,7 @@ const sidebarNavItems: NavItem[] = [
         title: 'Team',
         href: TeamSettingsController.edit(),
     },
-     {
+    {
         title: 'Website widget',
         href: WidgetSettingsController.edit(),
     },

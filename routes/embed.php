@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Widgets\WidgetFrameController;
+use App\Http\Controllers\Widgets\WidgetMessageController;
 use App\Models\Widget;
 use Illuminate\Support\Facades\Route;
 
@@ -13,3 +14,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('widget/{key}', WidgetFrameController::class)
     ->where('key', Widget::KEY_PATTERN)
     ->name('widget.frame');
+Route::post('widget/{key}/messages', [WidgetMessageController::class, 'store'])
+    ->where('key', Widget::KEY_PATTERN)
+    ->middleware('throttle:widget-messages')
+    ->name('widget.messages.store');

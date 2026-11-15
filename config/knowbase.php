@@ -20,5 +20,11 @@ return [
             env('AI_FALLBACK_PROVIDER'),
         ]))),
     ],
+    'widget' => [
+        'rate_limits' => [
+            'per_visitor' => 10, // questions per minute, per widget key + visitor IP
+            'per_widget' => 60,  // questions per minute, all visitors of one widget together
+        ],
+    ],
 
 ];
