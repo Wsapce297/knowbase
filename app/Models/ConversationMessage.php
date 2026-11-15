@@ -7,6 +7,7 @@ use Database\Factories\ConversationMessageFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class ConversationMessage extends Model
 {
@@ -45,5 +46,15 @@ class ConversationMessage extends Model
     public function conversation(): BelongsTo
     {
         return $this->belongsTo(Conversation::class);
+    }
+
+    /**
+     * The analytics entry for this answer (assistant messages only).
+     *
+     * @return HasOne<QuestionLog, $this>
+     */
+    public function questionLog(): HasOne
+    {
+        return $this->hasOne(QuestionLog::class);
     }
 }

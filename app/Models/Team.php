@@ -66,6 +66,16 @@ class Team extends Model
         return $this->hasOne(Widget::class);
     }
 
+    /**
+     * Every answered question, from the chat page and the widget (for analytics).
+     *
+     * @return HasMany<QuestionLog, $this>
+     */
+    public function questionLogs(): HasMany
+    {
+        return $this->hasMany(QuestionLog::class);
+    }
+
     public function owner(): ?User
     {
         return $this->members()

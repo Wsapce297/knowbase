@@ -7,6 +7,7 @@ use App\Ai\AskKnowbase;
 use App\Enums\MessageRole;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
+use App\Models\QuestionLog;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -48,7 +49,7 @@ class SendMessage
     }
 
     /**
-     * Save the question and the answer together, or neither.
+     * Save the question, the answer and its analytics entry together, or none of them.
      */
     private function save(Conversation $conversation, string $question, Answer $answer): ConversationMessage
     {
@@ -66,6 +67,8 @@ class SendMessage
             ]);
 
             $conversation->touch(); // moves it to the top of the conversation list
+
+            QuestionLog::record($conversation, $question, $answer, $reply);
 
             return $reply;
         });
