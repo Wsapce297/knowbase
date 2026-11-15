@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Widgets\Origin;
 use Database\Factories\WidgetFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,6 +25,11 @@ class Widget extends Model
     public const KEY_PREFIX = 'kbw_';
 
     public const KEY_RANDOM_LENGTH = 32;
+
+    /** What a key looks like, used as a route constraint so malformed keys never reach the database. */
+    public const KEY_PATTERN = 'kbw_[A-Za-z0-9]{32}';
+
+    public const DEFAULT_GREETING = "Hi! Ask me a question and I'll answer from our help documents.";
 
     /**
      * Fields a team can edit in settings. team_id and public_key are set by our own code.
@@ -86,6 +92,25 @@ class Widget extends Model
             url('widget.js'),
             $this->public_key,
         );
+    }
+
+    public function greetingText(): string
+    {
+        return $this->greeting ?? self::DEFAULT_GREETING;
+    }
+
+    /**
+     * The Content-Security-Policy value that tells browsers which websites may
+     * show the widget page in an iframe. Origins are validated when saved, but are
+     * cleaned again here so nothing unexpected can ever reach the header.
+     */
+    public function frameAncestorsPolicy(): string
+    {
+        $origins = array_values(array_unique(array_filter(
+            array_map(Origin::normalize(...), $this->allowed_origins ?? []),
+        )));
+
+        return 'frame-ancestors '.($origins === [] ? "'none'" : implode(' ', $origins));
     }
 
     /**
