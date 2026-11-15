@@ -138,7 +138,7 @@ async function send(): Promise<void> {
     }
 
     // Load the saved messages, the URL of the conversation and the updated list.
-     router.visit(ConversationController.show.url(finishedConversation), {
+    router.visit(ConversationController.show.url(finishedConversation), {
         preserveScroll: true,
         preserveState: true,
         showProgress: false, // a quiet background refresh, not a page change
