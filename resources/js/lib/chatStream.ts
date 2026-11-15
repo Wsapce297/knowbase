@@ -1,4 +1,5 @@
 import ChatMessageController from '@/actions/App/Http/Controllers/Chat/ChatMessageController';
+import { readServerSentEvents } from '@/lib/eventStream';
 import type { ChatStreamEvent } from '@/types/chat';
 
 /**
@@ -41,12 +42,8 @@ async function errorFor(response: Response): Promise<string> {
 }
 
 /**
- * Send a question and call onEvent for every streamed event.
- *
- * The server answers with "server-sent events": blocks of text like
- *   data: {"type":"text","text":"Hello"}
- * separated by a blank line. They can arrive split across network
- * chunks, so we collect text in a buffer and only handle complete blocks.
+ * Send a question and call onEvent for every streamed event
+ * (see readServerSentEvents for the format).
  */
 export async function streamChat(
     body: { question: string; conversation_id: number | null },
@@ -67,32 +64,5 @@ export async function streamChat(
         throw new ChatRequestError(await errorFor(response));
     }
 
-    const reader = response.body
-        .pipeThrough(new TextDecoderStream())
-        .getReader();
-
-    let buffer = '';
-
-    for (;;) {
-        const { value, done } = await reader.read();
-
-        if (done) {
-            break;
-        }
-
-        buffer += value;
-
-        let end = buffer.indexOf('\n\n');
-
-        while (end !== -1) {
-            const block = buffer.slice(0, end);
-            buffer = buffer.slice(end + 2);
-
-            if (block.startsWith('data: ')) {
-                onEvent(JSON.parse(block.slice(6)) as ChatStreamEvent);
-            }
-
-            end = buffer.indexOf('\n\n');
-        }
-    }
+    await readServerSentEvents<ChatStreamEvent>(response, onEvent);
 }
